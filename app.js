@@ -11,17 +11,27 @@ canvas.addEventListener('mousedown', startDrawing);
 canvas.addEventListener('mouseup', stopDrawing);
 canvas.addEventListener('mousemove', draw);
 
+canvas.addEventListener('touchstart', startDrawingTouch, { passive: false });
+canvas.addEventListener('touchend', stopDrawing, { passive: false });
+canvas.addEventListener('touchmove', drawTouch, { passive: false });
+
 clearCanvasButton.addEventListener('click', clearCanvas);
 saveDrawingButton.addEventListener('click', saveDrawing);
 
 function startDrawing(e) {
     drawing = true;
-    draw(e); // to start drawing immediately when mousedown
+    draw(e);
+}
+
+function startDrawingTouch(e) {
+    e.preventDefault();
+    drawing = true;
+    drawTouch(e);
 }
 
 function stopDrawing() {
     drawing = false;
-    ctx.beginPath(); // resets the current path
+    ctx.beginPath();
 }
 
 function draw(e) {
@@ -35,6 +45,21 @@ function draw(e) {
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+}
+
+function drawTouch(e) {
+    if (!drawing) return;
+    
+    e.preventDefault();
+    const touch = e.touches[0];
+    ctx.lineWidth = brushSize.value;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = colorPicker.value;
+
+    ctx.lineTo(touch.clientX - canvas.offsetLeft, touch.clientY - canvas.offsetTop);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(touch.clientX - canvas.offsetLeft, touch.clientY - canvas.offsetTop);
 }
 
 function clearCanvas() {
