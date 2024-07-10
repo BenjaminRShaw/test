@@ -3,99 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drawing App with Magnetometer</title>
+    <title>Sensor Data Display</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+        body {
+            font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
             background-color: #f0f0f0;
         }
-        canvas {
-            border: 1px solid black;
+        .sensor-data {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #000;
+            background-color: #fff;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <canvas id="drawingCanvas"></canvas>
+    <div id="magnetometer" class="sensor-data">Magnetometer: Not available</div>
+    <div id="accelerometer" class="sensor-data">Accelerometer: Not available</div>
+    <div id="gyroscope" class="sensor-data">Gyroscope: Not available</div>
+
     <script>
-        const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth * 0.9;
-            canvas.height = window.innerHeight * 0.9;
-        }
-
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        let drawing = false;
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
-
-        function startDrawing(e) {
-            drawing = true;
-            draw(e);
-        }
-
-        function draw(e) {
-            if (!drawing) return;
-            ctx.lineWidth = 5;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = '#000000';
-            ctx.beginPath();
-            const rect = canvas.getBoundingClientRect();
-            if (e.touches) {
-                ctx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
-                ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
-            } else {
-                ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-                ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-            }
-            ctx.stroke();
-        }
-
-        function stopDrawing() {
-            drawing = false;
-            ctx.beginPath();
-        }
-
         if ('Magnetometer' in window) {
-            let magnetometer = new Magnetometer();
-            magnetometer.addEventListener('reading', (e) => {
-                let x = magnetometer.x;
-                let y = magnetometer.y;
-                let z = magnetometer.z;
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                let angle = Math.atan2(y, x);
-                let magnitude = Math.sqrt(x*x + y*y);
-
-                ctx.save();
-                ctx.translate(canvas.width / 2, canvas.height / 2);
-                ctx.rotate(angle);
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(magnitude, 0);
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                ctx.restore();
+            let magnetometer = new Magnetometer({ frequency: 1 });
+            magnetometer.addEventListener('reading', () => {
+                document.getElementById('magnetometer').textContent = `Magnetometer:
+                    X: ${magnetometer.x.toFixed(2)} µT,
+                    Y: ${magnetometer.y.toFixed(2)} µT,
+                    Z: ${magnetometer.z.toFixed(2)} µT`;
             });
             magnetometer.start();
         } else {
-            console.log('Magnetometer not supported');
+            document.getElementById('magnetometer').textContent = 'Magnetometer: Not supported';
+        }
+
+        if ('Accelerometer' in window) {
+            let accelerometer = new Accelerometer({ frequency: 1 });
+            accelerometer.addEventListener('reading', () => {
+                document.getElementById('accelerometer').textContent = `Accelerometer:
+                    X: ${accelerometer.x.toFixed(2)} m/s²,
+                    Y: ${accelerometer.y.toFixed(2)} m/s²,
+                    Z: ${accelerometer.z.toFixed(2)} m/s²`;
+            });
+            accelerometer.start();
+        } else {
+            document.getElementById('accelerometer').textContent = 'Accelerometer: Not supported';
+        }
+
+        if ('Gyroscope' in window) {
+            let gyroscope = new Gyroscope({ frequency: 1 });
+            gyroscope.addEventListener('reading', () => {
+                document.getElementById('gyroscope').textContent = `Gyroscope:
+                    X: ${gyroscope.x.toFixed(2)} rad/s,
+                    Y: ${gyroscope.y.toFixed(2)} rad/s,
+                    Z: ${gyroscope.z.toFixed(2)} rad/s`;
+            });
+            gyroscope.start();
+        } else {
+            document.getElementById('gyroscope').textContent = 'Gyroscope: Not supported';
         }
     </script>
 </body>
